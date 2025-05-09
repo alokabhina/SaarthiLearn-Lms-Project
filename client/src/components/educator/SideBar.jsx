@@ -27,17 +27,12 @@ const SideBar = () => {
               : 'hover:bg-[#2a3a6e]/20 hover:text-[#64ffda]'}
           `}
         >
-          <div
-            className="w-6 h-6 bg-current mask mask-icon"
+          <img
+            src={item.icon}
+            alt={`${item.name} icon`}
+            className="w-6 h-6 transition-all duration-300 group-hover:filter group-hover:brightness-125 group-hover:drop-shadow-[0_0_4px_rgba(100,255,218,0.5)]"
             style={{
-              WebkitMaskImage: `url(${item.icon})`,
-              maskImage: `url(${item.icon})`,
-              WebkitMaskRepeat: 'no-repeat',
-              maskRepeat: 'no-repeat',
-              WebkitMaskSize: 'contain',
-              maskSize: 'contain',
-              WebkitMaskPosition: 'center',
-              maskPosition: 'center',
+              filter: 'brightness(0) invert(1)', // Makes the icon white by default (matches #c0d7ff)
             }}
           />
           <span className="text-sm">{item.name}</span>
