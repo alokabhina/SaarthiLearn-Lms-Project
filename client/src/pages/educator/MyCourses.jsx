@@ -1,0 +1,82 @@
+import React, { useContext, useEffect, useState } from 'react';
+import { AppContext } from '../../context/AppContext';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import Loading from '../../components/student/Loading';
+
+const MyCourses = () => {
+  const { backendUrl, isEducator, currency, getToken } = useContext(AppContext);
+  const [courses, setCourses] = useState(null);
+
+  const fetchEducatorCourses = async () => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.get(`${backendUrl}/api/educator/courses`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.success) setCourses(data.courses);
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (isEducator) fetchEducatorCourses();
+  }, [isEducator]);
+
+  return courses ? (
+    <div className="min-h-screen flex flex-col items-start gap-6 p-4 md:p-8 bg-[#0a1126] text-[#c0d7ff]">
+      <div className="w-full">
+        <h2 className="pb-4 text-xl font-semibold text-[#c0d7ff] text-shadow-[0_0_8px_rgba(253,216,53,0.3)]">
+          My Courses
+        </h2>
+        <div className="max-w-6xl w-full rounded-lg bg-[#2a3a6e]/50 border border-[#1a2a4d] shadow-[0_0_10px_rgba(61,90,241,0.3)]">
+          <table className="table-fixed md:table-auto w-full">
+            <thead className="text-[#c0d7ff] border-b border-[#1a2a4d] text-sm text-left">
+              <tr>
+                <th className="px-4 py-3 font-semibold truncate">All Courses</th>
+                <th className="px-4 py-3 font-semibold truncate">Earnings</th>
+                <th className="px-4 py-3 font-semibold truncate">Students</th>
+                <th className="px-4 py-3 font-semibold truncate">Published On</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm text-[#f8f8ff]">
+              {courses.map((course) => (
+                <tr
+                  key={course._id}
+                  className="border-b border-[#1a2a4d] hover:bg-[#1e3a8a]/30 transition-colors duration-200"
+                >
+                  <td className="md:px-4 pl-2 md:pl-4 py-3 flex items-center space-x-3 truncate">
+                    <img
+                      src={course.courseThumbnail}
+                      alt="Course"
+                      className="w-16 rounded border border-[#64ffda]/30"
+                    />
+                    <span className="truncate text-[#c0d7ff] hidden md:block">
+                      {course.courseTitle}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {currency}{' '}
+                    {Math.floor(
+                      course.enrolledStudents.length *
+                        (course.coursePrice - (course.discount * course.coursePrice) / 100)
+                    )}
+                  </td>
+                  <td className="px-4 py-3">{course.enrolledStudents.length}</td>
+                  <td className="px-4 py-3">
+                    {new Date(course.createdAt).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <Loading />
+  );
+};
+
+export default MyCourses;
