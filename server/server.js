@@ -6,7 +6,6 @@ import connectCloudinary from './configs/cloudinary.js';
 import userRouter from './routes/userRoutes.js';
 import educatorRouter from './routes/educatorRoutes.js';
 import courseRouter from './routes/courseRoute.js';
-import invoiceRouter from './routes/invoiceRoute.js';
 import { clerkMiddleware } from '@clerk/express';
 import { clerkWebhooks, stripeWebhooks } from './controllers/webhooks.js';
 
@@ -24,8 +23,7 @@ app.use(cors());
 app.post('/clerk', express.json(), clerkWebhooks);
 app.post('/stripe', express.raw({ type: 'application/json' }), stripeWebhooks);
 
-// Invoice route (before Clerk middleware, if public)
-app.use('/api/invoice', express.json(), invoiceRouter);
+
 
 // Clerk middleware for protected routes
 app.use(clerkMiddleware());
