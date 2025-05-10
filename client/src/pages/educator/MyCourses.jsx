@@ -3,6 +3,7 @@ import { AppContext } from '../../context/AppContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import Loading from '../../components/student/Loading';
+import { Trash2 } from 'lucide-react';
 
 const MyCourses = () => {
   const { backendUrl, isEducator, currency, getToken } = useContext(AppContext);
@@ -20,9 +21,23 @@ const MyCourses = () => {
     }
   };
 
-  useEffect(() => {
-    if (isEducator) fetchEducatorCourses();
-  }, [isEducator]);
+  const handleDelete = async (courseId) => {
+    if (!window.confirm('Are you sure you want to delete this course?')) return;
+    try {
+      const token = await getToken();
+      const { data } = await axios.delete(`${backendUrl}/api/educator/course/${courseId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.success) {
+        toast.success('Course deleted successfully');
+        fetchEducatorCourses(); 
+      } else {
+        toast.error('Failed to delete course');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Error deleting course');
+    }
+  };
 
   return courses ? (
     <div className="min-h-screen flex flex-col items-start gap-6 p-4 md:p-8 bg-[#0a1126] text-[#c0d7ff]">
@@ -38,6 +53,7 @@ const MyCourses = () => {
                 <th className="px-4 py-3 font-semibold truncate">Earnings</th>
                 <th className="px-4 py-3 font-semibold truncate">Students</th>
                 <th className="px-4 py-3 font-semibold truncate">Published On</th>
+                <th className="px-4 py-3 font-semibold truncate">Action</th>
               </tr>
             </thead>
             <tbody className="text-sm text-[#f8f8ff]">
@@ -66,6 +82,14 @@ const MyCourses = () => {
                   <td className="px-4 py-3">{course.enrolledStudents.length}</td>
                   <td className="px-4 py-3">
                     {new Date(course.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => handleDelete(course._id)}
+                      className="flex items-center text-sm text-red-400 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" /> Delete
+                    </button>
                   </td>
                 </tr>
               ))}

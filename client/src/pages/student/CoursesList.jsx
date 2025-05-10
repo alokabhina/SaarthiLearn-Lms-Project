@@ -25,8 +25,8 @@ const CoursesList = () => {
   }, [allCourses, input]);
 
   return (
-    <>
-      <div className="relative md:px-36 px-8 pt-20 min-h-screen bg-[#0a1126] text-[#c0d7ff]">
+    <div className="flex flex-col min-h-screen bg-[#0a1126] text-[#c0d7ff]">
+      <div className="flex-grow relative md:px-36 px-8 pt-20">
         <div className="flex md:flex-row flex-col gap-6 items-start justify-between w-full">
           <div>
             <h1 className="text-4xl font-semibold text-[#c0d7ff] text-shadow-[0_0_8px_rgba(253,216,53,0.3)]">
@@ -66,7 +66,7 @@ const CoursesList = () => {
         </div>
       </div>
       <Footer />
-    </>
+    </div>
   );
 };
 
