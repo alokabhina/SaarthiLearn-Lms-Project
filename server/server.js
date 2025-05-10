@@ -8,7 +8,6 @@ import { clerkMiddleware } from '@clerk/express'
 import { clerkWebhooks, stripeWebhooks } from './controllers/webhooks.js'
 import educatorRouter from './routes/educatorRoutes.js'
 import courseRouter from './routes/courseRoute.js'
-import invoiceRoutes from './routes/invoiceRoutes.js';
 
 // Initialize Express
 const app = express()
@@ -20,7 +19,6 @@ await connectCloudinary()
 // Middlewares
 app.use(cors())
 app.use(clerkMiddleware())
-app.use('/api/invoice', invoiceRoutes);
 
 // Routes
 app.get('/', (req, res) => res.send("API Working"))
