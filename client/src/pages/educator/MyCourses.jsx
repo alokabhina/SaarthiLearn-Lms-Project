@@ -24,7 +24,7 @@ const MyCourses = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log('Fetch Courses Response:', data);
+      console.log('API Response:', data);
 
       if (data.success) {
         setCourses(data.courses);
@@ -45,16 +45,10 @@ const MyCourses = () => {
   const handleDelete = async (courseId) => {
     if (!window.confirm('Are you sure you want to delete this course?')) return;
     try {
-      console.log('Deleting course with ID:', courseId);
       const token = await getToken();
-      console.log('Token for delete:', token);
-
       const { data } = await axios.delete(`${backendUrl}/api/educator/delete-course/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      console.log('Delete Course Response:', data);
-
       if (data.success) {
         toast.success('Course deleted successfully');
         fetchEducatorCourses();
@@ -62,10 +56,7 @@ const MyCourses = () => {
         toast.error(data.message || 'Failed to delete course');
       }
     } catch (error) {
-      console.error('Error deleting course:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Error deleting course';
-      toast.error(errorMessage);
-      setError(errorMessage);
+      toast.error(error.response?.data?.message || 'Error deleting course');
     }
   };
 
