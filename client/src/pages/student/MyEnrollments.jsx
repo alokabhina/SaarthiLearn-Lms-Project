@@ -6,7 +6,17 @@ import Footer from '../../components/student/Footer';
 import { toast } from 'react-toastify';
 
 const MyEnrollments = () => {
-  const { userData, enrolledCourses, fetchUserEnrolledCourses, navigate, backendUrl, getToken, calculateCourseDuration, calculateNoOfLectures } = useContext(AppContext);
+  const {
+    userData,
+    enrolledCourses,
+    fetchUserEnrolledCourses,
+    navigate,
+    backendUrl,
+    getToken,
+    calculateCourseDuration,
+    calculateNoOfLectures
+  } = useContext(AppContext);
+
   const [progressArray, setProgressData] = useState([]);
 
   const getCourseProgress = async () => {
@@ -63,48 +73,45 @@ const MyEnrollments = () => {
               </tr>
             </thead>
             <tbody className="text-gray-300">
-              {enrolledCourses.map((course, index) => (
-                <tr key={index} className="border-b border-gray-500/20 hover:bg-[#2A2A3B] transition-colors">
-                  <td className="px-4 py-3 flex items-center space-x-3">
-                    <img
-                      src={course.courseThumbnail}
-                      alt={course.courseTitle}
-                      className="w-16 sm:w-20 md:w-24 h-auto rounded"
-                    />
-                    <div className="flex-1">
-                      <p className="mb-1 max-sm:text-sm font-medium">{course.courseTitle}</p>
-                      <Line
-                        className="bg-gray-600 rounded-full w-full max-w-[200px]"
-                        strokeWidth={2}
-                        strokeColor="#3B82F6"
-                        percent={
-                          progressArray[index]
-                            ? (progressArray[index].lectureCompleted * 100) /
-                              progressArray[index].totalLectures
-                            : 0
-                        }
+              {enrolledCourses.map((course, index) => {
+                const progress = progressArray[index];
+                const total = progress?.totalLectures || 0;
+                const completed = progress?.lectureCompleted || 0;
+                const percent = total > 0 ? (completed * 100) / total : 0;
+
+                return (
+                  <tr key={index} className="border-b border-gray-500/20 hover:bg-[#2A2A3B] transition-colors">
+                    <td className="px-4 py-3 flex items-center space-x-3">
+                      <img
+                        src={course.courseThumbnail}
+                        alt={course.courseTitle}
+                        className="w-16 sm:w-20 md:w-24 h-auto rounded"
                       />
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 max-sm:hidden">{calculateCourseDuration(course)}</td>
-                  <td className="px-4 py-3 max-sm:hidden">
-                    {progressArray[index] &&
-                      `${progressArray[index].lectureCompleted} / ${progressArray[index].totalLectures}`}
-                    <span className="text-xs ml-2">Lectures</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => navigate('/player/' + course._id)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors max-sm:text-xs"
-                    >
-                      {progressArray[index] &&
-                      progressArray[index].lectureCompleted / progressArray[index].totalLectures === 1
-                        ? 'Completed'
-                        : 'Continue'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                      <div className="flex-1">
+                        <p className="mb-1 max-sm:text-sm font-medium">{course.courseTitle}</p>
+                        <Line
+                          className="bg-gray-600 rounded-full w-full max-w-[200px]"
+                          strokeWidth={2}
+                          strokeColor="#3B82F6"
+                          percent={percent}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 max-sm:hidden">{calculateCourseDuration(course)}</td>
+                    <td className="px-4 py-3 max-sm:hidden">
+                      {progress && `${completed} / ${total}`}<span className="text-xs ml-2">Lectures</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => navigate('/player/' + course._id)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors max-sm:text-xs"
+                      >
+                        {progress && total > 0 && completed / total === 1 ? 'Completed' : 'Continue'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
