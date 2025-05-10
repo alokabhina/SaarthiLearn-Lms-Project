@@ -9,48 +9,79 @@ const MyCourses = () => {
   const { backendUrl, isEducator, currency, getToken } = useContext(AppContext);
   const [courses, setCourses] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchEducatorCourses = async () => {
     try {
+      console.log('Fetching educator courses...');
+      console.log('isEducator:', isEducator);
+      console.log('backendUrl:', backendUrl);
+
       const token = await getToken();
+      console.log('Token:', token);
+
       const { data } = await axios.get(`${backendUrl}/api/educator/courses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log('Fetch Courses Response:', data);
+
       if (data.success) {
         setCourses(data.courses);
         setError(null);
       } else {
-        setError('Failed to fetch courses');
+        setError(data.message || 'Failed to fetch courses');
+        setCourses([]);
       }
     } catch (error) {
-      setError(error.message);
-      toast.error(error.message);
+      console.error('Error fetching courses:', error);
+      setError(error.response?.data?.message || error.message || 'Failed to fetch courses');
+      setCourses([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDelete = async (courseId) => {
     if (!window.confirm('Are you sure you want to delete this course?')) return;
     try {
+      console.log('Deleting course with ID:', courseId);
       const token = await getToken();
+      console.log('Token for delete:', token);
+
       const { data } = await axios.delete(`${backendUrl}/api/educator/delete-course/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log('Delete Course Response:', data);
+
       if (data.success) {
         toast.success('Course deleted successfully');
         fetchEducatorCourses();
       } else {
-        toast.error('Failed to delete course');
+        toast.error(data.message || 'Failed to delete course');
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error deleting course');
+      console.error('Error deleting course:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Error deleting course';
+      toast.error(errorMessage);
+      setError(errorMessage);
     }
   };
 
   useEffect(() => {
     if (isEducator) {
       fetchEducatorCourses();
+    } else {
+      console.log('User is not an educator');
+      setError('You are not authorized to view this page');
+      setLoading(false);
     }
   }, [isEducator]);
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0a1126] text-[#c0d7ff]">
@@ -58,11 +89,11 @@ const MyCourses = () => {
         <h2 className="pb-4 text-xl font-semibold text-[#c0d7ff] text-shadow-[0_0_8px_rgba(253,216,53,0.3)]">
           My Courses
         </h2>
-        {error && <p className="text-red-400 text-center">{error}</p>}
-        {courses ? (
-          courses.length === 0 ? (
-            <p className="text-center text-[#f8f8ff]">No courses found.</p>
-          ) : (
+        {error && <p className="text-red-400 text-center mb-4">{error}</p>}
+        {courses && courses.length === 0 ? (
+          <p className="text-center text-[#f8f8ff]">No courses found. Create a course to get started!</p>
+        ) : (
+          courses && (
             <div className="max-w-6xl w-full rounded-lg bg-[#2a3a6e]/50 border border-[#1a2a4d] shadow-[0_0_10px_rgba(61,90,241,0.3)]">
               <table className="table-fixed md:table-auto w-full">
                 <thead className="text-[#c0d7ff] border-b border-[#1a2a4d] text-sm text-left">
@@ -116,8 +147,6 @@ const MyCourses = () => {
               </table>
             </div>
           )
-        ) : (
-          <Loading />
         )}
       </div>
     </div>
