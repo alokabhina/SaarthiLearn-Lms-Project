@@ -71,7 +71,7 @@ const AddCourse = () => {
         if (chapter.chapterId === currentChapterId) {
           const newLecture = {
             ...lectureDetails,
-            lectureDuration: Number(lectureDetails.lectureDuration), // Convert to Number
+            lectureDuration: Number(lectureDetails.lectureDuration),
             lectureOrder: chapter.chapterContent.length > 0 ? chapter.chapterContent.slice(-1)[0].lectureOrder + 1 : 1,
             lectureId: uniqid(),
           };
@@ -91,6 +91,12 @@ const AddCourse = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Add confirmation dialog
+    const confirmCreate = window.confirm('Are you sure you want to create this course?');
+    if (!confirmCreate) {
+      return; // Exit if user cancels
+    }
+
     try {
       if (!image) {
         toast.error('Thumbnail Not Selected');
@@ -101,7 +107,6 @@ const AddCourse = () => {
         return;
       }
 
-      // Prepare courseContent without the UI-only 'collapsed' field
       const preparedChapters = chapters.map(chapter => ({
         chapterId: chapter.chapterId,
         chapterTitle: chapter.chapterTitle,
@@ -119,7 +124,7 @@ const AddCourse = () => {
       const courseData = {
         courseTitle,
         courseDescription: quillRef.current.root.innerHTML,
-        coursePrice: Number(coursePrice), // Match schema field name
+        coursePrice: Number(coursePrice),
         discount: Number(discount),
         courseContent: preparedChapters,
       };
@@ -128,7 +133,6 @@ const AddCourse = () => {
       formData.append('courseData', JSON.stringify(courseData));
       formData.append('image', image);
 
-      // Log FormData contents for debugging
       for (let [key, value] of formData.entries()) {
         console.log(`${key}:`, value);
       }
@@ -310,6 +314,7 @@ const AddCourse = () => {
                     </div>
                   ))}
                   <button
+                    type="button" // Prevent form submission
                     onClick={() => handleLecture('add', chapter.chapterId)}
                     className='mt-3 px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition'
                   >
@@ -320,6 +325,7 @@ const AddCourse = () => {
             </div>
           ))}
           <button
+            type="button" // Prevent form submission
             onClick={() => handleChapter('add')}
             className='w-full py-3 bg-gray-700/50 text-cyan-400 rounded-lg border border-gray-600 hover:bg-gray-600/80 transition'
           >
@@ -382,7 +388,7 @@ const AddCourse = () => {
                 </div>
               </div>
               <button
-                type='button'
+                type='button' // Prevent form submission
                 className='w-full mt-6 bg-cyan-500 text-white py-3 rounded-lg hover:bg-cyan-600 transition'
                 onClick={addLecture}
               >
