@@ -11,7 +11,7 @@ const teamMembers = [
     github: 'https://github.com/shalvi-hub',
     portfolio: 'https://shalvi-gaur.vercel.app/',
     linkedin: 'https://www.linkedin.com/in/shalvi-gaur-3617b332b/',
-    instagram: '', // Added to ensure all icons are displayed
+    instagram: 'https://www.instagram.com/herr__.02?igsh=MTM4bjBtZXp2Mmg4cg==',
     email: 'gaurshalvi5@gmail.com',
     image: assets.Shalvi_image,
     skills: ['React', 'Tailwind CSS', 'JavaScript'],
@@ -46,7 +46,7 @@ const teamMembers = [
     instagram: 'https://www.instagram.com/kritipandey23?igsh=MTl2ZHBvY3F3bm56cw==',
     portfolio: 'https://kriti-pandey.vercel.app/',
     linkedin: 'https://www.linkedin.com/in/kriti-pandey-27aa62332',
-    github: '', // Added to ensure all icons are displayed
+    github: 'https://github.com/Kritipadney', 
     email: 'kritipandey090@gmail.com',
     image: assets.Kriti_image,
     skills: ['Figma', 'Adobe XD', 'Prototyping'],
@@ -61,9 +61,9 @@ const teamMembers = [
     role: 'Material Designer',
     about: 'Creates visually appealing color palettes and material designs. Ensures consistent and vibrant aesthetics across the platform.',
     instagram: 'https://www.instagram.com/sumit.abhinandan?igsh=MTJjajJ1YWY2ZG12bw==',
-    portfolio: 'https://www.instagram.com/sumit.abhinandan?igsh=MW1qeGs2bTlvN3FuNQ==',
+    portfolio: 'https://sumit-abhinandan.github.io/cv',
     linkedin: 'https://www.linkedin.com/in/sumit-abhinandan-795717261',
-    github: '', // Added to ensure all icons are displayed
+    github: 'https://github.com/sumit-abhinandan',
     email: 'sumitabhinandan231@gmail.com',
     image: assets.Sumit_image,
     skills: ['Color Theory', 'Material Design', 'Graphic Design'],

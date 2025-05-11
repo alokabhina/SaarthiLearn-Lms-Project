@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { assets } from '../../assets/assets';
 
 const socialLinks = [
+  { icon: assets.instagram_icon, label: 'Instagram', url: 'https://www.instagram.com/sarthi.learn?utm_source=qr&igsh=dTJtNGUyZjh4ejY5' },
   { icon: assets.facebook_icon, label: 'Facebook', url: '#' },
   { icon: assets.twitter_icon,  label: 'Twitter',  url: '#' },
-  { icon: assets.instagram_icon, label: 'Instagram', url: '#' },
 ];
 
 const Footer = () => {

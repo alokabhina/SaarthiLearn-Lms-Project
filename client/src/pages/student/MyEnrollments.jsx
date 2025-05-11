@@ -55,34 +55,6 @@ const MyEnrollments = () => {
     }
   }, [enrolledCourses]);
 
-  // ✅ Function to Download Invoice PDF
-  const handleDownloadInvoice = async (course) => {
-    try {
-      const token = await getToken();
-
-      const response = await axios.post(
-        `${backendUrl}/api/user/generate-invoice`,
-        { courseId: course._id },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          responseType: 'blob', // Important to download PDF
-        }
-      );
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `${course.courseTitle}_invoice.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) {
-      toast.error("Invoice download failed.");
-    }
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-[#1E1E2F] text-[#C0C0C0]">
       <div className="flex-grow md:px-36 px-8 pt-10">
@@ -97,7 +69,7 @@ const MyEnrollments = () => {
                 <th className="px-4 py-3 font-semibold">Course</th>
                 <th className="px-4 py-3 font-semibold max-sm:hidden">Duration</th>
                 <th className="px-4 py-3 font-semibold max-sm:hidden">Completed</th>
-                <th className="px-4 py-3 font-semibold">Status / Billing</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
               </tr>
             </thead>
             <tbody className="text-gray-300">
@@ -129,19 +101,12 @@ const MyEnrollments = () => {
                     <td className="px-4 py-3 max-sm:hidden">
                       {progress && `${completed} / ${total}`}<span className="text-xs ml-2">Lectures</span>
                     </td>
-                    <td className="px-4 py-3 space-y-2">
+                    <td className="px-4 py-3">
                       <button
                         onClick={() => navigate('/player/' + course._id)}
                         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors max-sm:text-xs"
                       >
                         {progress && total > 0 && completed / total === 1 ? 'Completed' : 'Continue'}
-                      </button>
-                      <br />
-                      <button
-                        onClick={() => handleDownloadInvoice(course)}
-                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors max-sm:text-xs"
-                      >
-                        Download Invoice
                       </button>
                     </td>
                   </tr>
