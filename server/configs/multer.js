@@ -1,20 +1,12 @@
 import multer from 'multer';
-import path from 'path';
 
-// Configure storage for multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
+// Configure multer to use in-memory storage
+const storage = multer.memoryStorage();
 
 // File filter to accept only images
 const fileFilter = (req, file, cb) => {
   const filetypes = /jpeg|jpg|png/;
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const extname = filetypes.test(file.originalname.toLowerCase().split('.').pop());
   const mimetype = filetypes.test(file.mimetype);
 
   if (extname && mimetype) {
@@ -24,7 +16,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Initialize multer with storage and file filter
+// Initialize multer with in-memory storage and file filter
 const upload = multer({
   storage,
   fileFilter,

@@ -93,15 +93,27 @@ export const addCourse = async (req, res) => {
 
     const newCourse = await Course.create(parsedCourseData);
 
-    const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
-      folder: 'course_thumbnails',
+    // Upload the image directly from buffer to Cloudinary
+    const imageUpload = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'course_thumbnails' },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+      stream.end(imageFile.buffer);
     });
-    newCourse.courseThumbnail = imageUpload.secure_url;
 
+    newCourse.courseThumbnail = imageUpload.secure_url;
     await newCourse.save();
 
     res.status(201).json({ success: true, message: 'Course Added', course: newCourse });
   } catch (error) {
+    console.error('Error in addCourse:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
