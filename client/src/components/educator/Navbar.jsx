@@ -10,9 +10,9 @@ const Navbar = ({ bgColor }) => {
 
   return isEducator && user && (
     <div 
-      className="flex items-center justify-between px-4 md:px-8 py-4 
-                bg-[#0a1126] border-b border-[#2a3a6e] 
-                shadow-[0_0_15px_rgba(58,143,255,0.15)]"
+      className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-8 py-4 
+             bg-[#0a1126]/90 border-b border-[#2a3a6e] 
+             shadow-[0_0_15px_rgba(58,143,255,0.15)] backdrop-blur-sm"
     >
       {/* Logo with Glow Effect */}
       <Link to="/" className="hover:scale-105 transition-transform">

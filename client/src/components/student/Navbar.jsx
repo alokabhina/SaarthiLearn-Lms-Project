@@ -37,7 +37,10 @@ const Navbar = () => {
 
   return (
     <header
-      className="w-full px-4 sm:px-8 lg:px-28 py-4 transition-colors duration-300 border-b bg-[#0a1126] text-[#c0d7ff] border-[#1a2a4d]"
+      className="sticky top-0 z-50 w-full px-4 sm:px-8 lg:px-28 py-4 
+             transition-colors duration-300 border-b 
+             bg-[#0a1126]/90 text-[#c0d7ff] border-[#1a2a4d] 
+             backdrop-blur-sm shadow-[0_2px_10px_rgba(100,255,218,0.1)]"
     >
       <div className="flex items-center justify-between">
         {/* Logo */}
