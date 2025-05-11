@@ -71,6 +71,7 @@ const AddCourse = () => {
         if (chapter.chapterId === currentChapterId) {
           const newLecture = {
             ...lectureDetails,
+            lectureDuration: Number(lectureDetails.lectureDuration), // Convert to Number
             lectureOrder: chapter.chapterContent.length > 0 ? chapter.chapterContent.slice(-1)[0].lectureOrder + 1 : 1,
             lectureId: uniqid(),
           };
@@ -100,24 +101,43 @@ const AddCourse = () => {
         return;
       }
 
+      // Prepare courseContent without the UI-only 'collapsed' field
+      const preparedChapters = chapters.map(chapter => ({
+        chapterId: chapter.chapterId,
+        chapterTitle: chapter.chapterTitle,
+        chapterOrder: chapter.chapterOrder,
+        chapterContent: chapter.chapterContent.map(lecture => ({
+          lectureId: lecture.lectureId,
+          lectureTitle: lecture.lectureTitle,
+          lectureDuration: lecture.lectureDuration,
+          lectureUrl: lecture.lectureUrl,
+          isPreviewFree: lecture.isPreviewFree,
+          lectureOrder: lecture.lectureOrder,
+        })),
+      }));
+
       const courseData = {
         courseTitle,
         courseDescription: quillRef.current.root.innerHTML,
-        price: Number(coursePrice), // Changed to match backend expectation
+        coursePrice: Number(coursePrice), // Match schema field name
         discount: Number(discount),
-        courseContent: chapters,
+        courseContent: preparedChapters,
       };
 
       const formData = new FormData();
       formData.append('courseData', JSON.stringify(courseData));
       formData.append('image', image);
 
+      // Log FormData contents for debugging
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
+
       const token = await getToken();
 
       const { data } = await axios.post(`${backendUrl}/api/educator/add-course`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
         },
       });
 
@@ -134,6 +154,7 @@ const AddCourse = () => {
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create course');
+      console.error('Error submitting course:', error.response?.data);
     }
   };
 
@@ -179,8 +200,9 @@ const AddCourse = () => {
 
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
           <div>
-            <label className='block text-sm font-medium text-gray-300 mb-1'>Course Title</label>
+            <label htmlFor="courseTitle" className='block text-sm font-medium text-gray-300 mb-1'>Course Title</label>
             <input
+              id="courseTitle"
               onChange={e => setCourseTitle(e.target.value)}
               value={courseTitle}
               type="text"
@@ -190,8 +212,9 @@ const AddCourse = () => {
             />
           </div>
           <div>
-            <label className='block text-sm font-medium text-gray-300 mb-1'>Course Price</label>
+            <label htmlFor="coursePrice" className='block text-sm font-medium text-gray-300 mb-1'>Course Price</label>
             <input
+              id="coursePrice"
               onChange={e => setCoursePrice(e.target.value)}
               value={coursePrice}
               type="number"
@@ -210,8 +233,9 @@ const AddCourse = () => {
 
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
           <div>
-            <label className='block text-sm font-medium text-gray-300 mb-1'>Discount (%)</label>
+            <label htmlFor="discount" className='block text-sm font-medium text-gray-300 mb-1'>Discount (%)</label>
             <input
+              id="discount"
               onChange={e => setDiscount(e.target.value)}
               value={discount}
               type="number"
@@ -223,7 +247,7 @@ const AddCourse = () => {
             />
           </div>
           <div>
-            <label className='block text-sm font-medium text-gray-300 mb-1'>Course Thumbnail</label>
+            <label htmlFor="thumbnailImage" className='block text-sm font-medium text-gray-300 mb-1'>Course Thumbnail</label>
             <div className='flex items-center gap-3'>
               <label htmlFor='thumbnailImage' className='cursor-pointer'>
                 <div className='p-3 bg-cyan-500 rounded-lg hover:bg-cyan-600 transition'>
@@ -317,8 +341,9 @@ const AddCourse = () => {
               </div>
               <div className='space-y-4'>
                 <div>
-                  <label className='block text-sm font-medium text-gray-300 mb-1'>Lecture Title</label>
+                  <label htmlFor="lectureTitle" className='block text-sm font-medium text-gray-300 mb-1'>Lecture Title</label>
                   <input
+                    id="lectureTitle"
                     type="text"
                     className='w-full p-3 rounded-lg bg-gray-700/50 border border-gray-600 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500'
                     value={lectureDetails.lectureTitle}
@@ -326,8 +351,9 @@ const AddCourse = () => {
                   />
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-300 mb-1'>Duration (minutes)</label>
+                  <label htmlFor="lectureDuration" className='block text-sm font-medium text-gray-300 mb-1'>Duration (minutes)</label>
                   <input
+                    id="lectureDuration"
                     type="number"
                     className='w-full p-3 rounded-lg bg-gray-700/50 border border-gray-600 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500'
                     value={lectureDetails.lectureDuration}
@@ -335,8 +361,9 @@ const AddCourse = () => {
                   />
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-300 mb-1'>Lecture URL</label>
+                  <label htmlFor="lectureUrl" className='block text-sm font-medium text-gray-300 mb-1'>Lecture URL</label>
                   <input
+                    id="lectureUrl"
                     type="text"
                     className='w-full p-3 rounded-lg bg-gray-700/50 border border-gray-600 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500'
                     value={lectureDetails.lectureUrl}
@@ -344,8 +371,9 @@ const AddCourse = () => {
                   />
                 </div>
                 <div className='flex items-center gap-3'>
-                  <label className='text-sm font-medium text-gray-300'>Is Preview Free?</label>
+                  <label htmlFor="isPreviewFree" className='text-sm font-medium text-gray-300'>Is Preview Free?</label>
                   <input
+                    id="isPreviewFree"
                     type="checkbox"
                     className='h-5 w-5 text-cyan-500 focus:ring-cyan-500'
                     checked={lectureDetails.isPreviewFree}

@@ -24,6 +24,9 @@ export const updateRoleToEducator = async (req, res) => {
 // Add New Course
 export const addCourse = async (req, res) => {
   try {
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file);
+
     const { courseData } = req.body;
     const imageFile = req.file;
     const educatorId = req.auth.userId;
@@ -40,12 +43,50 @@ export const addCourse = async (req, res) => {
     try {
       parsedCourseData = JSON.parse(courseData);
     } catch (error) {
-      return res.status(400).json({ success: false, message: 'Invalid course data format' });
+      return res.status(400).json({ success: false, message: 'Invalid course data format: ' + error.message });
     }
 
     // Validate required fields
-    if (!parsedCourseData.courseTitle || parsedCourseData.price === undefined) {
+    if (!parsedCourseData.courseTitle || parsedCourseData.coursePrice === undefined) {
       return res.status(400).json({ success: false, message: 'Course title and price are required' });
+    }
+
+    if (typeof parsedCourseData.coursePrice !== 'number' || parsedCourseData.coursePrice < 0) {
+      return res.status(400).json({ success: false, message: 'Course price must be a non-negative number' });
+    }
+
+    if (typeof parsedCourseData.discount !== 'number' || parsedCourseData.discount < 0 || parsedCourseData.discount > 100) {
+      return res.status(400).json({ success: false, message: 'Discount must be a number between 0 and 100' });
+    }
+
+    if (!parsedCourseData.courseDescription) {
+      return res.status(400).json({ success: false, message: 'Course description is required' });
+    }
+
+    // Validate courseContent structure
+    if (parsedCourseData.courseContent && Array.isArray(parsedCourseData.courseContent)) {
+      for (const chapter of parsedCourseData.courseContent) {
+        if (!chapter.chapterId || !chapter.chapterTitle || !chapter.chapterOrder) {
+          return res.status(400).json({ success: false, message: 'Each chapter must have chapterId, chapterTitle, and chapterOrder' });
+        }
+        if (chapter.chapterContent && Array.isArray(chapter.chapterContent)) {
+          for (const lecture of chapter.chapterContent) {
+            if (
+              !lecture.lectureId ||
+              !lecture.lectureTitle ||
+              lecture.lectureDuration === undefined ||
+              !lecture.lectureUrl ||
+              lecture.isPreviewFree === undefined ||
+              !lecture.lectureOrder
+            ) {
+              return res.status(400).json({ success: false, message: 'Each lecture must have lectureId, lectureTitle, lectureDuration, lectureUrl, isPreviewFree, and lectureOrder' });
+            }
+            if (typeof lecture.lectureDuration !== 'number') {
+              return res.status(400).json({ success: false, message: 'Lecture duration must be a number' });
+            }
+          }
+        }
+      }
     }
 
     parsedCourseData.educator = educatorId;
@@ -130,7 +171,6 @@ export const getEnrolledStudentsData = async (req, res) => {
     const purchases = await Purchase.find({
       courseId: { $in: courseIds },
       status: 'completed',
- 
     })
       .populate('userId', 'name imageUrl')
       .populate('courseId', 'courseTitle');
@@ -143,7 +183,7 @@ export const getEnrolledStudentsData = async (req, res) => {
 
     // Include students enrolled in free courses
     for (const course of courses) {
-      if (course.price === 0) {
+      if (course.coursePrice === 0) {
         const students = await User.find(
           { _id: { $in: course.enrolledStudents } },
           'name imageUrl'
@@ -207,7 +247,7 @@ export const enrollFreeCourse = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Course not found' });
     }
 
-    if (course.price !== 0) {
+    if (course.coursePrice !== 0) {
       return res.status(400).json({ success: false, message: 'This is not a free course' });
     }
 
