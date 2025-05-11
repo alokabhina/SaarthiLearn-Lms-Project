@@ -36,7 +36,12 @@ export const addCourse = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Course data is required' });
     }
 
-    const parsedCourseData = JSON.parse(courseData);
+    let parsedCourseData;
+    try {
+      parsedCourseData = JSON.parse(courseData);
+    } catch (error) {
+      return res.status(400).json({ success: false, message: 'Invalid course data format' });
+    }
 
     // Validate required fields
     if (!parsedCourseData.courseTitle || parsedCourseData.price === undefined) {
@@ -47,7 +52,9 @@ export const addCourse = async (req, res) => {
 
     const newCourse = await Course.create(parsedCourseData);
 
-    const imageUpload = await cloudinary.uploader.upload(imageFile.path);
+    const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
+      folder: 'course_thumbnails',
+    });
     newCourse.courseThumbnail = imageUpload.secure_url;
 
     await newCourse.save();
@@ -123,6 +130,7 @@ export const getEnrolledStudentsData = async (req, res) => {
     const purchases = await Purchase.find({
       courseId: { $in: courseIds },
       status: 'completed',
+ 
     })
       .populate('userId', 'name imageUrl')
       .populate('courseId', 'courseTitle');
@@ -162,7 +170,7 @@ export const getEnrolledStudentsData = async (req, res) => {
 // Delete Educator's Course
 export const deleteCourse = async (req, res) => {
   try {
-    const courseId = req.params.courseId; // Fixed: Changed courseid to courseId
+    const courseId = req.params.courseId;
     const educatorId = req.auth.userId;
 
     const course = await Course.findById(courseId);

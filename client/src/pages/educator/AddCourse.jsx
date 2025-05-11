@@ -95,11 +95,15 @@ const AddCourse = () => {
         toast.error('Thumbnail Not Selected');
         return;
       }
+      if (!courseTitle || coursePrice < 0 || discount < 0 || discount > 100) {
+        toast.error('Invalid course details');
+        return;
+      }
 
       const courseData = {
         courseTitle,
         courseDescription: quillRef.current.root.innerHTML,
-        coursePrice: Number(coursePrice),
+        price: Number(coursePrice), // Changed to match backend expectation
         discount: Number(discount),
         courseContent: chapters,
       };
@@ -110,8 +114,11 @@ const AddCourse = () => {
 
       const token = await getToken();
 
-      const { data } = await axios.post(backendUrl + '/api/educator/add-course', formData, {
-        headers: { Authorization: `Bearer ${token}` },
+      const { data } = await axios.post(`${backendUrl}/api/educator/add-course`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       if (data.success) {
@@ -126,7 +133,7 @@ const AddCourse = () => {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || 'Failed to create course');
     }
   };
 
@@ -155,10 +162,7 @@ const AddCourse = () => {
         ]
       });
 
-      // Set default text color
       quillRef.current.format('color', '#E0F7FA');
-      
-      // Ensure new text follows the default color
       quillRef.current.on('text-change', () => {
         const range = quillRef.current.getSelection();
         if (range) {
@@ -192,6 +196,7 @@ const AddCourse = () => {
               value={coursePrice}
               type="number"
               placeholder='0'
+              min="0"
               className='w-full p-3 rounded-lg bg-gray-700/50 border border-gray-600 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500'
               required
             />
@@ -211,8 +216,8 @@ const AddCourse = () => {
               value={discount}
               type="number"
               placeholder='0'
-              min={0}
-              max={100}
+              min="0"
+              max="100"
               className='w-full p-3 rounded-lg bg-gray-700/50 border border-gray-600 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500'
               required
             />
