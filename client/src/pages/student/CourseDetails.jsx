@@ -35,16 +35,35 @@ const CourseDetails = () => {
       if (isAlreadyEnrolled) return toast.warn('Already Enrolled');
 
       const token = await getToken();
-      const { data } = await axios.post(
-        `${backendUrl}/api/user/purchase`,
-        { courseId: courseData._id },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const isFreeCourse = courseData.coursePrice === 0;
 
-      if (data.success) {
-        window.location.replace(data.session_url);
+      let response;
+      if (isFreeCourse) {
+        // Free course: Call /api/educator/enroll-free
+        response = await axios.post(
+          `${backendUrl}/api/educator/enroll-free`,
+          { courseId: courseData._id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       } else {
-        toast.error(data.message);
+        // Paid course: Call /api/user/purchase-course (corrected endpoint)
+        response = await axios.post(
+          `${backendUrl}/api/user/purchase-course`,
+          { courseId: courseData._id },
+          { headers: { Authorization: `Bearer ${token}`, Origin: window.location.origin } }
+        );
+      }
+
+      if (response.data.success) {
+        if (isFreeCourse) {
+          toast.success('Successfully enrolled in free course!');
+          // Optionally redirect to course page
+          window.location.href = `/course/${courseData._id}`;
+        } else {
+          window.location.replace(response.data.session_url); // Redirect to Stripe
+        }
+      } else {
+        toast.error(response.data.message);
       }
     } catch (error) {
       toast.error(error.message);
