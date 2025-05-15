@@ -23,7 +23,9 @@ app.use(cors());
 app.post('/clerk', express.json(), clerkWebhooks);
 app.post('/stripe', express.raw({ type: 'application/json' }), stripeWebhooks);
 
-
+// Favicon handlers to prevent 404/500 errors
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+app.get('/favicon.png', (req, res) => res.status(204).end());
 
 // Clerk middleware for protected routes
 app.use(clerkMiddleware());
