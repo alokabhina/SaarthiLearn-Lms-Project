@@ -3,11 +3,13 @@ import { AppContext } from '../../context/AppContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import Loading from '../../components/student/Loading';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const MyCourses = () => {
   const { backendUrl, isEducator, currency, getToken } = useContext(AppContext);
   const [courses, setCourses] = useState(null);
+  const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -124,7 +126,13 @@ const MyCourses = () => {
                       <td className="px-4 py-3">
                         {new Date(course.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 flex gap-2">
+                        <button
+                          onClick={() => navigate(`/educator/edit-course/${course._id}`)}
+                          className="flex items-center text-sm text-blue-400 hover:text-blue-500 transition-colors"
+                        >
+                          <Pencil className="w-4 h-4 mr-1" /> Edit
+                        </button>
                         <button
                           onClick={() => handleDelete(course._id)}
                           className="flex items-center text-sm text-red-400 hover:text-red-500 transition-colors"

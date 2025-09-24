@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { Routes, Route, useLocation, useMatch } from 'react-router-dom'
+import { Routes, Route, useLocation, useMatch, useParams } from 'react-router-dom'
 import Navbar from './components/student/Navbar'
 import Home from './pages/student/Home'
 import CourseDetails from './pages/student/CourseDetails'
@@ -8,6 +8,7 @@ import Dashboard from './pages/educator/Dashboard'
 import AddCourse from './pages/educator/AddCourse'
 import MyCourses from './pages/educator/MyCourses'
 import StudentsEnrolled from './pages/educator/StudentsEnrolled'
+import EditCourse from './pages/educator/EditCourse'
 import Educator from './pages/educator/Educator'
 import 'quill/dist/quill.snow.css'
 import 'react-toastify/dist/ReactToastify.css';
@@ -17,8 +18,13 @@ import MyEnrollments from './pages/student/MyEnrollments'
 import Loading from './components/student/Loading'
 import Team from './pages/student/Team';
 
-const App = () => {
+// Wrapper to extract courseId param and pass to EditCourse
+const EditCourseWrapper = () => {
+  const { courseId } = useParams();
+  return <EditCourse courseId={courseId} />;
+};
 
+const App = () => {
   const isEducatorRoute = useMatch('/educator/*');
 
   return (
@@ -35,11 +41,12 @@ const App = () => {
         <Route path="/my-enrollments" element={<MyEnrollments />} />
         <Route path="/player/:courseId" element={<Player />} />
         <Route path="/loading/:path" element={<Loading />} />
-        <Route path='/educator' element={<Educator />}>``
-          <Route path='/educator' element={<Dashboard />} />
+        <Route path='/educator' element={<Educator />}>
+          <Route path='' element={<Dashboard />} />
           <Route path='add-course' element={<AddCourse />} />
           <Route path='my-courses' element={<MyCourses />} />
           <Route path='student-enrolled' element={<StudentsEnrolled />} />
+          <Route path='edit-course/:courseId' element={<EditCourseWrapper />} />
         </Route>
       </Routes>
     </div>
