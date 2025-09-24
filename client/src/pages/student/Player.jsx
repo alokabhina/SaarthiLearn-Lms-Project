@@ -17,25 +17,42 @@ const getYouTubeVideoId = (url) => {
     return null;
   }
 
-  // Trim and decode URL to handle whitespace or encoded characters
-  const sanitizedUrl = url.trim().replace(/%20/g, ' ');
+  let sanitizedUrl = url.trim();
 
-  // Updated regex to handle live streams and various YouTube URL formats
-  const regex = /(?:youtube\.com\/(?:live\/|(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=))|youtu\.be\/)([^"&?\/\s]{11})(?:\?[^"&?]*)?/i;
-  const match = sanitizedUrl.match(regex);
+  try {
+    const urlObject = new URL(sanitizedUrl);
+    const hostname = urlObject.hostname.toLowerCase();
 
-  if (!match) {
-    console.warn('Failed to extract YouTube video ID from URL:', sanitizedUrl);
+    let id = null;
+
+    if (hostname === 'youtu.be') {
+      id = urlObject.pathname.slice(1).split('/')[0];
+    } else if (hostname.endsWith('youtube.com') || hostname.endsWith('youtube-nocookie.com')) {
+      const pathname = urlObject.pathname;
+      if (pathname.startsWith('/watch')) {
+        id = urlObject.searchParams.get('v');
+      } else if (pathname.startsWith('/embed/')) {
+        id = pathname.slice(7).split('/')[0];
+      } else if (pathname.startsWith('/v/')) {
+        id = pathname.slice(3).split('/')[0];
+      } else if (pathname.startsWith('/live/')) {
+        id = pathname.slice(6).split('/')[0];
+      } else if (pathname.startsWith('/shorts/')) {
+        id = pathname.slice(8).split('/')[0];
+      }
+    }
+
+    // Validate the extracted ID: must be exactly 11 characters of allowed set
+    if (id && id.length === 11 && /^[a-zA-Z0-9_-]{11}$/.test(id)) {
+      return id;
+    } else {
+      console.warn('Extracted invalid YouTube video ID:', id, 'from URL:', sanitizedUrl);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error parsing YouTube URL:', error, url);
     return null;
   }
-
-  const videoId = match[1];
-  if (videoId.length !== 11) {
-    console.warn('Extracted video ID is invalid:', videoId);
-    return null;
-  }
-
-  return videoId;
 };
 
 const Player = () => {
@@ -48,7 +65,119 @@ const Player = () => {
   const [initialRating, setInitialRating] = useState(0);
   const [previewData, setPreviewData] = useState(null);
 
-  // ... (other functions like getCourseData, fetchPreviewData, etc. remain unchanged)
+  // Fetch course data for enrolled users
+  const getCourseData = () => {
+    enrolledCourses.forEach((course) => {
+      if (course._id === courseId) {
+        setCourseData(course);
+        course.courseRatings.forEach((item) => {
+          if (item.userId === userData._id) {
+            setInitialRating(item.rating);
+          }
+        });
+      }
+    });
+  };
+
+  // Fetch course data for preview (no authentication required)
+  const fetchPreviewData = async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/course/${courseId}`);
+      if (data.success) {
+        setPreviewData(data.course);
+        // Automatically select the first preview lecture if available
+        const previewLecture = data.course.courseContent
+          .flatMap((chapter) => chapter.chapterContent)
+          .find((lecture) => lecture.isPreviewFree && lecture.lectureUrl);
+        if (previewLecture) {
+          setPlayerData({ ...previewLecture, chapter: 1, lecture: 1 });
+        } else {
+          toast.error('No free preview video available for this course.');
+        }
+      } else {
+        toast.error(data.message || 'Failed to load preview data');
+      }
+    } catch (error) {
+      toast.error('Error fetching preview data: ' + error.message);
+    }
+  };
+
+  const toggleSection = (index) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
+  useEffect(() => {
+    if (enrolledCourses.length > 0) {
+      getCourseData();
+    } else {
+      fetchPreviewData();
+    }
+  }, [enrolledCourses]);
+
+  const markLectureAsCompleted = async (lectureId) => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.post(
+        `${backendUrl}/api/user/update-course-progress`,
+        { courseId, lectureId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (data.success) {
+        toast.success(data.message);
+        getCourseProgress();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const getCourseProgress = async () => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.post(
+        `${backendUrl}/api/user/get-course-progress`,
+        { courseId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (data.success) {
+        setProgressData(data.progressData);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleRate = async (rating) => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.post(
+        `${backendUrl}/api/user/add-rating`,
+        { courseId, rating },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (data.success) {
+        toast.success(data.message);
+        fetchUserEnrolledCourses();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (enrolledCourses.length > 0) {
+      getCourseProgress();
+    }
+  }, []);
 
   const displayData = courseData || previewData;
 
@@ -139,7 +268,7 @@ const Player = () => {
                 videoId={getYouTubeVideoId(playerData.lectureUrl)}
                 onError={(e) => {
                   console.error('YouTube player error:', e);
-                  toast.error('Failed to load video. It may be a live stream issue, private, deleted, or the URL is invalid.');
+                  toast.error('Failed to load video. It may be private, deleted, or the URL is invalid.');
                 }}
               />
               <div className="flex justify-between items-center mt-1">
