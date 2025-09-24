@@ -12,10 +12,30 @@ import Loading from '../../components/student/Loading';
 
 // Utility function to extract YouTube video ID from URL
 const getYouTubeVideoId = (url) => {
-  if (!url || typeof url !== 'string' || url.trim() === '') return null;
-  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-  const match = url.match(regex);
-  return match ? match[1] : null;
+  if (!url || typeof url !== 'string' || url.trim() === '') {
+    console.warn('Invalid or empty YouTube URL:', url);
+    return null;
+  }
+
+  // Trim and decode URL to handle whitespace or encoded characters
+  const sanitizedUrl = url.trim().replace(/%20/g, ' ');
+
+  // Updated regex to handle various YouTube URL formats, including query parameters
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})(?:\?[^"&?]*)?/i;
+  const match = sanitizedUrl.match(regex);
+
+  if (!match) {
+    console.warn('Failed to extract YouTube video ID from URL:', sanitizedUrl);
+    return null;
+  }
+
+  const videoId = match[1];
+  if (videoId.length !== 11) {
+    console.warn('Extracted video ID is invalid:', videoId);
+    return null;
+  }
+
+  return videoId;
 };
 
 const Player = () => {
@@ -26,7 +46,7 @@ const Player = () => {
   const [openSections, setOpenSections] = useState({});
   const [playerData, setPlayerData] = useState(null);
   const [initialRating, setInitialRating] = useState(0);
-  const [previewData, setPreviewData] = useState(null); // For free preview
+  const [previewData, setPreviewData] = useState(null);
 
   // Fetch course data for enrolled users
   const getCourseData = () => {
@@ -142,7 +162,6 @@ const Player = () => {
     }
   }, []);
 
-  // Use previewData if courseData is not available (non-enrolled user)
   const displayData = courseData || previewData;
 
   return displayData ? (
@@ -191,9 +210,14 @@ const Player = () => {
                           <div className="flex gap-2">
                             {lecture.lectureUrl && (lecture.isPreviewFree || courseData) && (
                               <p
-                                onClick={() =>
-                                  setPlayerData({ ...lecture, chapter: index + 1, lecture: i + 1 })
-                                }
+                                onClick={() => {
+                                  const videoId = getYouTubeVideoId(lecture.lectureUrl);
+                                  if (videoId) {
+                                    setPlayerData({ ...lecture, chapter: index + 1, lecture: i + 1 });
+                                  } else {
+                                    toast.error('Invalid YouTube URL for this lecture');
+                                  }
+                                }}
                                 className="text-blue-500 cursor-pointer"
                               >
                                 Watch
@@ -225,7 +249,10 @@ const Player = () => {
               <YouTube
                 iframeClassName="w-full aspect-video"
                 videoId={getYouTubeVideoId(playerData.lectureUrl)}
-                onError={() => toast.error('Invalid YouTube URL or video unavailable')}
+                onError={(e) => {
+                  console.error('YouTube player error:', e);
+                  toast.error('Failed to load video. It may be private, deleted, or the URL is invalid.');
+                }}
               />
               <div className="flex justify-between items-center mt-1">
                 <p className="text-xl text-white">
