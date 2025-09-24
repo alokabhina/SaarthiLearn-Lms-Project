@@ -244,46 +244,6 @@ export const deleteCourse = async (req, res) => {
 };
 
 // Enroll in Free Course
-// Edit Educator's Course
-export const editCourse = async (req, res) => {
-  try {
-    const courseId = req.params.courseId;
-    const educatorId = req.auth.userId;
-    const updates = req.body;
-
-    const course = await Course.findById(courseId);
-
-    if (!course) {
-      return res.status(404).json({ success: false, message: 'Course not found' });
-    }
-
-    if (course.educator.toString() !== educatorId) {
-      return res.status(403).json({ success: false, message: 'Unauthorized to edit this course' });
-    }
-
-    // Only allow certain fields to be updated
-    const allowedFields = [
-      'courseTitle',
-      'courseDescription',
-      'courseThumbnail',
-      'coursePrice',
-      'discount',
-      'courseContent',
-      'isPublished'
-    ];
-    allowedFields.forEach(field => {
-      if (updates[field] !== undefined) {
-        course[field] = updates[field];
-      }
-    });
-
-    await course.save();
-    res.status(200).json({ success: true, message: 'Course updated successfully', course });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
 export const enrollFreeCourse = async (req, res) => {
   try {
     const { courseId } = req.body;
@@ -315,6 +275,84 @@ export const enrollFreeCourse = async (req, res) => {
     });
 
     res.status(200).json({ success: true, message: 'Successfully enrolled in free course' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Edit Educator's Course (Updated with validation)
+export const editCourse = async (req, res) => {
+  try {
+    const courseId = req.params.courseId;
+    const educatorId = req.auth.userId;
+    const updates = req.body;
+
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ success: false, message: 'Course not found' });
+    }
+
+    if (course.educator.toString() !== educatorId) {
+      return res.status(403).json({ success: false, message: 'Unauthorized to edit this course' });
+    }
+
+    // Validation for updated fields
+    if (updates.courseTitle && !updates.courseTitle.trim()) {
+      return res.status(400).json({ success: false, message: 'Course title is required' });
+    }
+    if (updates.courseDescription && !updates.courseDescription.trim()) {
+      return res.status(400).json({ success: false, message: 'Course description is required' });
+    }
+    if (updates.coursePrice !== undefined && (typeof updates.coursePrice !== 'number' || updates.coursePrice < 0)) {
+      return res.status(400).json({ success: false, message: 'Course price must be a non-negative number' });
+    }
+    if (updates.discount !== undefined && (typeof updates.discount !== 'number' || updates.discount < 0 || updates.discount > 100)) {
+      return res.status(400).json({ success: false, message: 'Discount must be a number between 0 and 100' });
+    }
+    if (updates.courseContent && Array.isArray(updates.courseContent)) {
+      for (const chapter of updates.courseContent) {
+        if (!chapter.chapterId || !chapter.chapterTitle || !chapter.chapterOrder) {
+          return res.status(400).json({ success: false, message: 'Each chapter must have chapterId, chapterTitle, and chapterOrder' });
+        }
+        if (chapter.chapterContent && Array.isArray(chapter.chapterContent)) {
+          for (const lecture of chapter.chapterContent) {
+            if (
+              !lecture.lectureId ||
+              !lecture.lectureTitle ||
+              lecture.lectureDuration === undefined ||
+              !lecture.lectureUrl ||
+              lecture.isPreviewFree === undefined ||
+              !lecture.lectureOrder
+            ) {
+              return res.status(400).json({ success: false, message: 'Each lecture must have lectureId, lectureTitle, lectureDuration, lectureUrl, isPreviewFree, and lectureOrder' });
+            }
+            if (typeof lecture.lectureDuration !== 'number') {
+              return res.status(400).json({ success: false, message: 'Lecture duration must be a number' });
+            }
+          }
+        }
+      }
+    }
+
+    // Only allow certain fields to be updated
+    const allowedFields = [
+      'courseTitle',
+      'courseDescription',
+      'courseThumbnail',
+      'coursePrice',
+      'discount',
+      'courseContent',
+      'isPublished'
+    ];
+    allowedFields.forEach(field => {
+      if (updates[field] !== undefined) {
+        course[field] = updates[field];
+      }
+    });
+
+    await course.save();
+    res.status(200).json({ success: true, message: 'Course updated successfully', course });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

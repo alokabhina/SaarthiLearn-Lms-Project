@@ -23,6 +23,21 @@ educatorRouter.post('/add-course', upload.single('image'), protectEducator, addC
 // Get Educator Courses
 educatorRouter.get('/courses', protectEducator, getEducatorCourses);
 
+// Get Single Educator Course (New: For editing/fetching details)
+educatorRouter.get('/courses/:courseId', protectEducator, async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const educatorId = req.auth.userId;
+    const course = await Course.findOne({ _id: courseId, educator: educatorId });
+    if (!course) {
+      return res.status(404).json({ success: false, message: 'Course not found or not authorized' });
+    }
+    res.status(200).json({ success: true, courseData: course });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Delete Educator Course
 educatorRouter.delete('/delete-course/:courseId', protectEducator, deleteCourse);
 
